@@ -3,8 +3,8 @@
    Lee 6 tablas (4 de Almacén + 2 de Asistencia).
    ========================================================== */
 
-const SUPABASE_URL = "https://qkkwvacltcmpgmtrvpjf.supabase.co";
-const SUPABASE_KEY = "sb_publishable_UZnT5Fj2Hp8qLOyrWf4Ilw_1QcW_O5U";
+const SUPABASE_URL = "https://mtsewbdhgkfzwwnewfhy.supabase.co/";
+const SUPABASE_KEY = "https://mtsewbdhgkfzwwnewfhy.supabase.co";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* ---------- Paleta ELEDÉ ---------- */

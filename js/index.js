@@ -3,8 +3,8 @@
    Detecta el tipo por el nombre de la hoja: MB52, LT22, ZLX12, ZWM
    ========================================================== */
 
-const SUPABASE_URL = "https://qkkwvacltcmpgmtrvpjf.supabase.co";
-const SUPABASE_KEY = "sb_publishable_UZnT5Fj2Hp8qLOyrWf4Ilw_1QcW_O5U";
+const SUPABASE_URL = "https://mtsewbdhgkfzwwnewfhy.supabase.co/";
+const SUPABASE_KEY = "https://mtsewbdhgkfzwwnewfhy.supabase.co";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const fileInput = document.getElementById('excelFile');
