@@ -4,7 +4,7 @@
    ========================================================== */
 
 const SUPABASE_URL = "https://mtsewbdhgkfzwwnewfhy.supabase.co/";
-const SUPABASE_KEY = "https://mtsewbdhgkfzwwnewfhy.supabase.co";
+const SUPABASE_KEY = "sb_publishable_UwAMub1-i76B7uwPIQACiA_hYnAfhhB";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const fileInput = document.getElementById('excelFile');
