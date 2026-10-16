@@ -1290,7 +1290,7 @@ async function cargarTodo() {
   state.factPedido = factPedido; state.factPLU = factPLU;
   state.recepPacking = recepPacking; state.recepDetalle = recepDetalle;
 
-    const count = [mb52, lt22, zlx12, zwm, asistencia, horasExtra, factPedido, factPLU, recepPacking, recepDetalle].filter(Boolean).length;
+    const count = [mb52, lt22, zlx12, zwm, asistencia, horasExtra, factPedido, factPLU, recepPacking, recepDetalle].filter(x => x).length;
   $("stRegistros").textContent = `${count} / 10`;
   $("stSync").textContent = new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 
