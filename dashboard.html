@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>Dashboard Almacén | ELEDÉ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+</head>
+<body>
+
+    <div id="loading" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <p>Cargando dashboard…</p>
+    </div>
+
+    <header class="topbar" id="topbar" hidden>
+        <div class="brand">
+            <img src="img/LOGO.png" alt="ELEDÉ" class="brand-logo">
+            <div class="brand-text">
+                <strong>ELEDÉ</strong>
+                <span>| Control de Almacén</span>
+            </div>
+        </div>
+        <div class="chips">
+            <div class="chip"><span>Registros</span><b id="chipRegistros">—</b></div>
+            <div class="chip"><span>Última sincronización</span><b id="chipSync">—</b></div>
+        </div>
+        <div class="topbar-right">
+            <span class="live"><i></i>Datos en vivo</span>
+            <button type="button" class="icon-btn js-refresh" title="Actualizar datos">
+                <i class="fas fa-rotate"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="shell" id="shell" hidden>
+        <aside class="sidebar">
+            <p class="nav-label">Paneles</p>
+            <nav class="tabs" id="dashTabs" aria-label="Secciones">
+                <a href="#" class="tab active" data-seccion="almacen"><i class="fas fa-warehouse"></i><span>Almacén</span></a>
+                <a href="#" class="tab" data-seccion="asistencia"><i class="fas fa-user-clock"></i><span>Asistencia</span></a>
+                <a href="#" class="tab" data-seccion="facturacion"><i class="fas fa-file-invoice-dollar"></i><span>Facturación</span></a>
+                <a href="#" class="tab" data-seccion="recepcion"><i class="fas fa-clipboard-check"></i><span>Recepción</span></a>
+            </nav>
+            <p class="nav-label">Sistema y reportes</p>
+            <div class="nav-actions">
+                <button type="button" class="nav-btn js-refresh"><i class="fas fa-rotate"></i><span>Actualizar datos</span></button>
+            </div>
+            <div class="status-card">
+                <h4>Fuente de datos</h4>
+                <p class="status-sub">Supabase · dashboard_data</p>
+                <div class="bar"><i style="width:100%"></i></div>
+                <dl>
+                    <div><dt>Tablas cargadas</dt><dd id="stRegistros">—</dd></div>
+                    <div><dt>Sincronizado</dt><dd id="stSync">—</dd></div>
+                </dl>
+            </div>
+        </aside>
+
+        <main class="main">
+            <section id="almacen" class="dashboard-section" hidden>
+                <div class="page-head">
+                    <div>
+                        <h1>Almacén</h1>
+                        <p>Stock · Movimientos · Traslados · Stock Negativo</p>
+                    </div>
+                </div>
+
+                <!-- Sub-tabs internas -->
+                <nav class="subtabs" id="subTabs">
+                    <button type="button" class="subtab active" data-sub="resumen"><i class="fas fa-chart-pie"></i> Resumen</button>
+                    <button type="button" class="subtab" data-sub="movimientos"><i class="fas fa-right-left"></i> Movimientos</button>
+                    <button type="button" class="subtab" data-sub="traslados"><i class="fas fa-truck-ramp-box"></i> Traslados</button>
+                    <button type="button" class="subtab" data-sub="negativos"><i class="fas fa-triangle-exclamation"></i> Stock Negativo</button>
+                </nav>
+
+                <!-- Sub-secciones -->
+                <div id="sub-resumen" class="subseccion">
+                    <section class="filters-row" id="filtersResumen"></section>
+                    <section class="kpi-row" id="kpiResumen"></section>
+                    <section class="charts-exec" id="gridResumen"></section>
+                </div>
+
+                <div id="sub-movimientos" class="subseccion" style="display:none;">
+                    <section class="filters-row" id="filtersMov"></section>
+                    <section class="kpi-row" id="kpiMov"></section>
+                    <section class="charts-exec" id="gridMov"></section>
+                </div>
+
+                <div id="sub-traslados" class="subseccion" style="display:none;">
+                    <section class="filters-row" id="filtersTras"></section>
+                    <section class="kpi-row" id="kpiTras"></section>
+                    <section class="charts-exec" id="gridTras"></section>
+                </div>
+
+                <div id="sub-negativos" class="subseccion" style="display:none;">
+                    <section class="filters-row" id="filtersNeg"></section>
+                    <section class="kpi-row" id="kpiNeg"></section>
+                    <section class="charts-exec" id="gridNeg"></section>
+                </div>
+            </section>
+
+            <section id="asistencia" class="dashboard-section" hidden>
+    <div class="page-head">
+        <div>
+            <h1>Asistencia</h1>
+            <p>Asistencia · Horas Extra</p>
+        </div>
+    </div>
+
+    <nav class="subtabs" id="subTabsA">
+        <button type="button" class="subtab active" data-sub="asistencia"><i class="fas fa-user-clock"></i> Asistencia</button>
+        <button type="button" class="subtab" data-sub="horasextra"><i class="fas fa-clock"></i> Horas Extra</button>
+    </nav>
+
+    <div id="subA-asistencia" class="subseccion">
+        <section class="filters-row" id="filtersAsis"></section>
+        <section class="kpi-row" id="kpiAsis"></section>
+        <section class="charts-exec" id="gridAsis"></section>
+    </div>
+
+    <div id="subA-horasextra" class="subseccion" style="display:none;">
+        <section class="filters-row" id="filtersHoras"></section>
+        <section class="kpi-row" id="kpiHoras"></section>
+        <section class="charts-exec" id="gridHoras"></section>
+    </div>
+</section>
+            <section id="facturacion" class="dashboard-section" hidden>
+    <div class="page-head">
+        <div>
+            <h1>Facturación</h1>
+            <p>Pedidos · PLU · Zonas</p>
+        </div>
+    </div>
+
+    <nav class="subtabs" id="subTabsF">
+        <button type="button" class="subtab active" data-sub="pedido"><i class="fas fa-file-invoice"></i> Pedidos</button>
+        <button type="button" class="subtab" data-sub="plu"><i class="fas fa-tags"></i> PLU</button>
+    </nav>
+
+    <div id="subF-pedido" class="subseccion">
+        <section class="filters-row" id="filtersPed"></section>
+        <section class="kpi-row" id="kpiPed"></section>
+        <section class="charts-exec" id="gridPed"></section>
+    </div>
+
+    <div id="subF-plu" class="subseccion" style="display:none;">
+        <section class="filters-row" id="filtersPLU"></section>
+        <section class="kpi-row" id="kpiPLU"></section>
+        <section class="charts-exec" id="gridPLU"></section>
+    </div>
+</section>
+            </section>
+            <section id="recepcion" class="dashboard-section" hidden>
+    <div class="page-head">
+        <div>
+            <h1>Recepción</h1>
+            <p>Importaciones · Ingresos · Pendientes</p>
+        </div>
+    </div>
+
+    <nav class="subtabs" id="subTabsR">
+        <button type="button" class="subtab active" data-sub="packing"><i class="fas fa-boxes-packing"></i> Packing List</button>
+        <button type="button" class="subtab" data-sub="detalle"><i class="fas fa-clipboard-list"></i> Ingresos por PLU</button>
+    </nav>
+
+    <div id="subR-packing" class="subseccion">
+        <section class="filters-row" id="filtersPack"></section>
+        <section class="kpi-row" id="kpiPack"></section>
+        <section class="charts-exec" id="gridPack"></section>
+    </div>
+
+    <div id="subR-detalle" class="subseccion" style="display:none;">
+        <section class="filters-row" id="filtersDet"></section>
+        <section class="kpi-row" id="kpiDet"></section>
+        <section class="charts-exec" id="gridDet"></section>
+    </div>
+</section>
+        </main>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
