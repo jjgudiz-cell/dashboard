@@ -49,11 +49,15 @@ async function cargarHoja(nombre) {
     .from("dashboard_data")
     .select("row_index, data")
     .eq("sheet_name", nombre)
-    .order("row_index", { ascending: true })
-    .limit(1);
+    .order("row_index", { ascending: true });
   if (error) throw error;
   if (!data || data.length === 0) return null;
-  return data[0].data;
+  if (data.length === 1) {
+    const d = data[0].data;
+    if (d && (d.filas || d.kpis || d.porAlmacen || d.porZona || d.porDetalle || d.porCampana)) return d;
+    return { filas: [d], kpis: {} };
+  }
+  return { filas: data.map(r => r.data), kpis: {} };
 }
 
 /* ---------- Plugins ---------- */
@@ -1285,24 +1289,25 @@ async function cargarTodo() {
     cargarHoja("RECEP_PACKING").catch(() => null),
     cargarHoja("RECEP_DETALLE").catch(() => null),
   ]);
-const norm1 = (d) => Array.isArray(d) ? { filas: d, kpis: {} } : d;
-state.mb52 = norm1(mb52); state.lt22 = norm1(lt22); state.zlx12 = norm1(zlx12);
-state.zwm = norm1(zwm); state.asistencia = norm1(asistencia); state.horasExtra = norm1(horasExtra);
-state.factPedido = norm1(factPedido); state.factPLU = norm1(factPLU);
-state.recepPacking = norm1(recepPacking); state.recepDetalle = norm1(recepDetalle);
 
-    const count = [mb52, lt22, zlx12, zwm, asistencia, horasExtra, factPedido, factPLU, recepPacking, recepDetalle].filter(x => x).length;
+  state.mb52 = mb52; state.lt22 = lt22; state.zlx12 = zlx12;
+  state.zwm = zwm; state.asistencia = asistencia; state.horasExtra = horasExtra;
+  state.factPedido = factPedido; state.factPLU = factPLU;
+  state.recepPacking = recepPacking; state.recepDetalle = recepDetalle;
+
+  const count = [mb52, lt22, zlx12, zwm, asistencia, horasExtra, factPedido, factPLU, recepPacking, recepDetalle].filter(x => x).length;
   $("stRegistros").textContent = `${count} / 10`;
   $("stSync").textContent = new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 
-  const totalReg = (mb52?.filas?.length || 0) + (lt22?.filas?.length || 0) +
-                   (zlx12?.filas?.length || 0) + (state.zwm?.kpis?.totalRegistros || 0) +
-                   (state.asistencia?.kpis?.totalRegistros || 0) +
-                   (state.horasExtra?.kpis?.totalRegistros || 0) +
-                   (state.factPedido?.kpis?.totalRegistros || 0) +
-                   (state.factPLU?.kpis?.totalRegistros || 0) +
-                   (state.recepPacking?.kpis?.totalRegistros || 0) +
-                   (state.recepDetalle?.kpis?.totalRegistros || 0);
+  const totalReg = (state.mb52?.filas?.length || 0) + (state.lt22?.filas?.length || 0) +
+                   (state.zlx12?.filas?.length || 0) +
+                   (state.zwm?.filas?.length || 0) + (state.zwm?.kpis?.totalRegistros || 0) +
+                   (state.asistencia?.filas?.length || 0) + (state.asistencia?.kpis?.totalRegistros || 0) +
+                   (state.horasExtra?.filas?.length || 0) + (state.horasExtra?.kpis?.totalRegistros || 0) +
+                   (state.factPedido?.filas?.length || 0) + (state.factPedido?.kpis?.totalRegistros || 0) +
+                   (state.factPLU?.filas?.length || 0) + (state.factPLU?.kpis?.totalRegistros || 0) +
+                   (state.recepPacking?.filas?.length || 0) + (state.recepPacking?.kpis?.totalRegistros || 0) +
+                   (state.recepDetalle?.filas?.length || 0) + (state.recepDetalle?.kpis?.totalRegistros || 0);
   $("chipRegistros").textContent = fmt(totalReg);
   $("chipSync").textContent = new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
 
