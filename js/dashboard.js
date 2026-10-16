@@ -1285,10 +1285,11 @@ async function cargarTodo() {
     cargarHoja("RECEP_PACKING").catch(() => null),
     cargarHoja("RECEP_DETALLE").catch(() => null),
   ]);
-  state.mb52 = mb52; state.lt22 = lt22; state.zlx12 = zlx12; state.zwm = zwm;
-  state.asistencia = asistencia; state.horasExtra = horasExtra;
-  state.factPedido = factPedido; state.factPLU = factPLU;
-  state.recepPacking = recepPacking; state.recepDetalle = recepDetalle;
+const norm1 = (d) => Array.isArray(d) ? { filas: d, kpis: {} } : d;
+state.mb52 = norm1(mb52); state.lt22 = norm1(lt22); state.zlx12 = norm1(zlx12);
+state.zwm = norm1(zwm); state.asistencia = norm1(asistencia); state.horasExtra = norm1(horasExtra);
+state.factPedido = norm1(factPedido); state.factPLU = norm1(factPLU);
+state.recepPacking = norm1(recepPacking); state.recepDetalle = norm1(recepDetalle);
 
     const count = [mb52, lt22, zlx12, zwm, asistencia, horasExtra, factPedido, factPLU, recepPacking, recepDetalle].filter(x => x).length;
   $("stRegistros").textContent = `${count} / 10`;
