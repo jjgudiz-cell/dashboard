@@ -466,53 +466,39 @@ function llenarSelect(id, valores, etiqueta) {
   if (actual && valores.includes(actual)) sel.value = actual;
 }
 function llenarSegmentadores() {
-  if (state.mb52) {
-    const alms = [...new Set(state.mb52.filas.map(f => f.alm))].sort();
-    llenarSelect("fResAlmacen", alms, "Almacén");
-    const cats = [...new Set(state.mb52.filas.map(f => f.cat))].sort();
-    llenarSelect("fResCategoria", cats, "Categoría");
+  if (state.mb52?.filas) {
+    llenarSelect("fResAlmacen", [...new Set(state.mb52.filas.map(f => f.alm))].sort(), "Almacén");
+    llenarSelect("fResCategoria", [...new Set(state.mb52.filas.map(f => f.cat))].sort(), "Categoría");
   }
-  if (state.lt22) {
-    const usr = [...new Set(state.lt22.filas.map(f => f.usuario))].sort();
-    llenarSelect("fMovUsuario", usr, "Usuario");
-    const cats = [...new Set(state.lt22.filas.map(f => f.cat))].sort();
-    llenarSelect("fMovCategoria", cats, "Categoría");
+  if (state.lt22?.filas) {
+    llenarSelect("fMovUsuario", [...new Set(state.lt22.filas.map(f => f.usuario))].sort(), "Usuario");
+    llenarSelect("fMovCategoria", [...new Set(state.lt22.filas.map(f => f.cat))].sort(), "Categoría");
   }
-  if (state.zlx12) {
-    const usr = [...new Set(state.zlx12.filas.map(f => f.usuario))].sort();
-    llenarSelect("fTrasUsuario", usr, "Usuario");
+  if (state.zlx12?.filas) {
+    llenarSelect("fTrasUsuario", [...new Set(state.zlx12.filas.map(f => f.usuario))].sort(), "Usuario");
   }
-  if (state.zwm) {
-    const alms = state.zwm.porAlmacen.map(a => a.nombre).sort();
-    llenarSelect("fNegAlmacen", alms, "Almacén");
+  if (state.zwm?.porAlmacen) {
+    llenarSelect("fNegAlmacen", state.zwm.porAlmacen.map(a => a.nombre).sort(), "Almacén");
   }
-  if (state.asistencia) {
-    const trab = [...new Set(state.asistencia.filas.map(f => f.nombre))].sort();
-    llenarSelect("fAsisTrabajador", trab, "Trabajador");
-    const perm = [...new Set(state.asistencia.filas.map(f => f.permiso))].sort();
-    llenarSelect("fAsisPermiso", perm, "Permiso");
+  if (state.asistencia?.filas) {
+    llenarSelect("fAsisTrabajador", [...new Set(state.asistencia.filas.map(f => f.nombre))].sort(), "Trabajador");
+    llenarSelect("fAsisPermiso", [...new Set(state.asistencia.filas.map(f => f.permiso))].sort(), "Permiso");
   }
-  if (state.horasExtra) {
-    const trab = [...new Set(state.horasExtra.filas.map(f => f.nombre))].sort();
-    llenarSelect("fHorasTrabajador", trab, "Trabajador");
+  if (state.horasExtra?.filas) {
+    llenarSelect("fHorasTrabajador", [...new Set(state.horasExtra.filas.map(f => f.nombre))].sort(), "Trabajador");
   }
-    if (state.factPedido) {
-    const zonas = [...new Set(state.factPedido.filas.map(f => f.zona))].sort();
-    llenarSelect("fPedZona", zonas, "Zona");
+  if (state.factPedido?.filas) {
+    llenarSelect("fPedZona", [...new Set(state.factPedido.filas.map(f => f.zona))].sort(), "Zona");
   }
-  if (state.factPLU) {
-    const jer = [...new Set(state.factPLU.filas.map(f => f.jerarquia))].sort();
-    llenarSelect("fPluJerarquia", jer, "Jerarquía");
+  if (state.factPLU?.filas) {
+    llenarSelect("fPluJerarquia", [...new Set(state.factPLU.filas.map(f => f.jerarquia))].sort(), "Jerarquía");
   }
-        if (state.recepPacking) {
-    const camps = state.recepPacking.porCampana.map(c => c.campana).sort();
-    llenarSelect("fPackCampana", camps, "Campaña");
+  if (state.recepPacking?.porCampana) {
+    llenarSelect("fPackCampana", state.recepPacking.porCampana.map(c => c.campana).sort(), "Campaña");
   }
-  if (state.recepDetalle) {
-    const provs = [...new Set(state.recepDetalle.porDetalle.map(f => f.proveedor).filter(Boolean))].sort();
-    llenarSelect("fDetProveedor", provs, "Proveedor");
-    const ests = [...new Set(state.recepDetalle.porDetalle.map(f => f.estado).filter(Boolean))].sort();
-    llenarSelect("fDetEstado", ests, "Estado");
+  if (state.recepDetalle?.porDetalle) {
+    llenarSelect("fDetProveedor", [...new Set(state.recepDetalle.porDetalle.map(f => f.proveedor).filter(Boolean))].sort(), "Proveedor");
+    llenarSelect("fDetEstado", [...new Set(state.recepDetalle.porDetalle.map(f => f.estado).filter(Boolean))].sort(), "Estado");
   }
 }
 
