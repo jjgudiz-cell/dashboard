@@ -32,9 +32,10 @@ const HOJAS_VALIDAS = {
   "DETALLE_POR_PLU": "RECEP_DETALLE",
 };
 
-let resultadoPendiente = null;  // { sheetName, tipo, payload }
+const BATCH_SIZE = 1000;
 
-/* ---------- Progreso ---------- */
+let resultadoPendiente = null;
+
 function setProgreso(pct, label) {
   progressBox.style.display = 'block';
   progressBar.style.width = pct + '%';
@@ -45,7 +46,6 @@ function ocultarProgreso() {
   setTimeout(() => { progressBox.style.display = 'none'; }, 1500);
 }
 
-/* ---------- Worker ---------- */
 function procesarEnWorker(tipo, rows) {
   return new Promise((resolve, reject) => {
     const worker = new Worker('js/worker.js');
@@ -63,7 +63,36 @@ function procesarEnWorker(tipo, rows) {
   });
 }
 
-/* ---------- Lectura del Excel ---------- */
+/* ---------- Subida por lotes ---------- */
+async function subirPorLotes(sheetName, filas) {
+  const total = filas.length;
+  const lotes = Math.ceil(total / BATCH_SIZE);
+
+  // 1) Borrar lo anterior
+  setProgreso(5, `Borrando datos anteriores de ${sheetName}…`);
+  await supabaseClient.from('dashboard_data').delete().eq('sheet_name', sheetName);
+
+  // 2) Insertar por lotes
+  for (let i = 0; i < lotes; i++) {
+    const desde = i * BATCH_SIZE;
+    const hasta = Math.min(desde + BATCH_SIZE, total);
+    const chunk = filas.slice(desde, hasta);
+    const registros = chunk.map((fila, j) => ({
+      sheet_name: sheetName,
+      row_index: desde + j,
+      data: fila,
+    }));
+
+    const pct = 10 + Math.round(((i + 1) / lotes) * 85);
+    setProgreso(pct, `Insertando lote ${i + 1}/${lotes} (${hasta}/${total} filas)…`);
+
+    const { error } = await supabaseClient.from('dashboard_data').insert(registros);
+    if (error) throw new Error(`Lote ${i + 1}: ${error.message}`);
+  }
+
+  return total;
+}
+
 fileInput.addEventListener('change', async function (e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -82,7 +111,6 @@ fileInput.addEventListener('change', async function (e) {
     setProgreso(15, 'Abriendo Excel…');
     const workbook = XLSX.read(data, { type: 'array', cellDates: false, cellNF: false, cellStyles: false });
 
-    // Buscar la primera hoja cuyo nombre esté en HOJAS_VALIDAS
     let hojaTipo = null;
     for (const nombre of workbook.SheetNames) {
       if (HOJAS_VALIDAS[nombre.trim()]) { hojaTipo = nombre.trim(); break; }
@@ -90,7 +118,7 @@ fileInput.addEventListener('change', async function (e) {
 
     if (!hojaTipo) {
       setProgreso(100, 'Error');
-      mostrarMensaje('La hoja no coincide con ninguna conocida (MB52, LT22, ZLX12, ZWM, ASISTENCIA, HORAS_EXTRA).', 'error');
+      mostrarMensaje('La hoja no coincide con ninguna conocida.', 'error');
       ocultarProgreso();
       return;
     }
@@ -105,14 +133,21 @@ fileInput.addEventListener('change', async function (e) {
     setProgreso(55, `Procesando ${hojaTipo} (${rows.length} filas)…`);
     const agregado = await procesarEnWorker(hojaTipo, rows);
 
+    // Si el worker devuelve un array de filas, lo usamos directo para lotes.
+    // Si devuelve un objeto con .filas, usamos eso.
+    const filasParaSubir = Array.isArray(agregado)
+      ? agregado
+      : (agregado.filas && Array.isArray(agregado.filas) ? agregado.filas : [agregado]);
+
     resultadoPendiente = {
       sheetName: HOJAS_VALIDAS[hojaTipo],
       tipo: hojaTipo,
+      filas: filasParaSubir,
       payload: agregado,
     };
 
     const li = document.createElement('li');
-    li.innerHTML = `<i class="fas fa-check-circle"></i> ${hojaTipo} listo · ${rows.length} filas procesadas`;
+    li.innerHTML = `<i class="fas fa-check-circle"></i> ${hojaTipo} listo · ${rows.length} filas procesadas · ${filasParaSubir.length} registros a subir`;
     sheetList.appendChild(li);
 
     setProgreso(100, `${hojaTipo} procesado`);
@@ -127,7 +162,6 @@ fileInput.addEventListener('change', async function (e) {
   }
 });
 
-/* ---------- Subir a Supabase ---------- */
 btnSubir.addEventListener('click', async function () {
   if (!resultadoPendiente) {
     mostrarMensaje('Primero selecciona un archivo Excel válido.', 'error');
@@ -139,18 +173,11 @@ btnSubir.addEventListener('click', async function () {
   setProgreso(0, `Subiendo ${resultadoPendiente.sheetName}…`);
 
   try {
-    const { sheetName, tipo, payload } = resultadoPendiente;
-
-    setProgreso(30, `Borrando datos anteriores de ${sheetName}…`);
-    await supabaseClient.from('dashboard_data').delete().eq('sheet_name', sheetName);
-
-    setProgreso(70, `Insertando ${sheetName}…`);
-    const registro = { sheet_name: sheetName, row_index: 0, data: payload };
-    const { error } = await supabaseClient.from('dashboard_data').insert([registro]);
-    if (error) throw error;
+    const { sheetName, tipo, filas } = resultadoPendiente;
+    const total = await subirPorLotes(sheetName, filas);
 
     setProgreso(100, `${tipo} subido correctamente`);
-    mostrarMensaje(`✅ ${tipo} subido. Puedes subir el siguiente Excel.`, 'ok');
+    mostrarMensaje(`✅ ${tipo} subido (${total} filas en lotes de ${BATCH_SIZE}).`, 'ok');
     resultadoPendiente = null;
     sheetStatus.style.display = 'none';
     fileInput.value = '';
